@@ -3,13 +3,13 @@ from flask import Flask, render_template, request, send_from_directory
 from PIL import Image
 from werkzeug.utils import secure_filename
 app = Flask(__name__)
-UPLOAD_FOLDER = 'uploads'
-COMPRESSED_FOLDER = 'compressed'
+uploaded_imgs = 'uploads'
+compressed_imgs = 'compressed'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-os.makedirs(COMPRESSED_FOLDER, exist_ok=True)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['COMPRESSED_FOLDER'] = COMPRESSED_FOLDER
+os.makedirs(uploaded_imgs, exist_ok=True)
+os.makedirs(compressed_imgs, exist_ok=True)
+app.config['UPLOAD_FOLDER'] = uploaded_imgs
+app.config['COMPRESSED_FOLDER'] = compressed_imgs
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 @app.route('/', methods=['GET', 'POST'])
@@ -19,8 +19,8 @@ def index():
         file = request.files.get('image')
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
-            original_path = os.path.join(UPLOAD_FOLDER, filename)
-            compressed_path = os.path.join(COMPRESSED_FOLDER, filename)
+            original_path = os.path.join(uploaded_imgs, filename)
+            compressed_path = os.path.join(compressed_imgs, filename)
             file.save(original_path)
             # Compressor image
             image = Image.open(original_path)
@@ -36,9 +36,9 @@ def index():
     return render_template('index.html')
 @app.route('/compressed/<filename>')
 def serve_image(filename):
-    return send_from_directory(COMPRESSED_FOLDER, filename)
+    return send_from_directory(compressed_imgs, filename)
 @app.route('/download/<filename>')
 def download_file(filename):
-    return send_from_directory(COMPRESSED_FOLDER, filename, as_attachment=True)
+    return send_from_directory(compressed_imgs, filename, as_attachment=True)
 if __name__ == '__main__':
     app.run(debug=True)
